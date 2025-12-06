@@ -1,0 +1,151 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+
+\geometry{margin=1in}
+\setstretch{1.15}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Thames Water Incident Report}
+\lhead{Student ID: [Your ID]}
+\cfoot{\thepage}
+
+\title{\textbf{Situational Awareness: Thames Water Cyberattack Incident Response Report}}
+\author{Student ID: [Your ID]}
+\date{December 12, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+This report provides a comprehensive analysis of the cyberattack targeting the Thames Water Treatment Facility. It details the attack lifecycle, from spear-phishing and initial access to Modbus exploitation and data exfiltration. It also analyzes the concurrent psychological operations (disinformation campaign). Finally, it proposes a robust defence strategy and includes a custom Bash script to automate immediate mitigation measures.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Executive Summary}
+The Thames Water Treatment Facility (WTCS) was targeted by a sophisticated coordinated attack combining cyber sabotage with a psychological disinformation campaign. The attackers gained access via spear-phishing, compromised the internal network, and manipulated Critical National Infrastructure (CNI) systems.
+
+\textbf{Key Findings:}
+\begin{itemize}
+    \item \textbf{Attack Vector:} Spear-phishing targeting plant administrators.
+    \item \textbf{Compromise:} Successful infection of the Admin Workstation (10.0.0.30) and lateral movement to the PLC (10.0.0.10).
+    \item \textbf{Operational Impact:} Manipulation of chemical dosing systems via Modbus TCP (Port 502).
+    \item \textbf{Psychological Impact:} Deepfake media circulated to incite public panic about "toxic" water.
+\end{itemize}
+
+This report recommends immediate network segmentation, firewall hardening, and a public counter-disinformation strategy.
+
+\section{Threat Intelligence Analysis}
+
+\subsection{Attacker Profile (MOC)}
+Based on the sophistication of the attack, the adversary is identified as a \textbf{State-Sponsored Advanced Persistent Threat (APT)}.
+
+\begin{itemize}
+    \item \textbf{Means:} Custom malware, Modbus-specific knowledge, zero-day exploitation tools, and deepfake generation capabilities.
+    \item \textbf{Opportunity:} Exploited weak perimeter security and lack of network segmentation between IT and OT networks.
+    \item \textbf{Motivate:} Political destabilization and disruption of UK Critical National Infrastructure (CNI) rather than financial gain.
+\end{itemize}
+
+\subsection{Disinformation Campaign Analysis}
+Simultaneously with the cyber breach, the attackers launched a disinformation campaign.
+\begin{itemize}
+    \item \textbf{Content:} Deepfake videos of officials admitting to water contamination.
+    \item \textbf{Distribution:} Social media botnets and compromised news aggregators.
+    \item \textbf{Goal:} To amplify the physical impact of the attack by causing mass panic and distrust in government services.
+\end{itemize}
+
+\section{Technical Analysis of Cyber Components}
+Analysis of the provided PCAP file (\texttt{Thames\_water\_attack.pcap}) reveals a multi-stage kill chain.
+
+\subsection{Reconnaissance}
+The attackers performed extensive scanning using Nmap-like tools.
+\begin{itemize}
+    \item \textbf{Source IP:} 192.0.2.25
+    \item \textbf{Target:} Subnet 10.0.0.0/24
+    \item \textbf{Ports Scanned:} TCP 21 (FTP), 23 (Telnet), 502 (Modbus), 3389 (RDP).
+\end{itemize}
+
+\subsection{Exploitation \& Lateral Movement}
+Following the scan, the attackers exploited a vulnerability in the SMB protocol (Port 445) to move laterally from the compromised workstation to the control network.
+\begin{itemize}
+    \item \textbf{Evidence:} Large SMB packet transfers between 10.0.0.30 (Admin) and 10.0.0.10 (PLC).
+\end{itemize}
+
+\subsection{Command \& Control (C2)}
+The compromised system established a persistent connection to an external C2 server.
+\begin{itemize}
+    \item \textbf{C2 IP:} 203.0.113.5
+    \item \textbf{Domain:} \texttt{updcdn.ru} (Suspicious Russian TLD)
+    \item \textbf{Protocol:} HTTP POST requests containing encrypted payloads.
+    \item \textbf{DNS Tunneling:} Traffic observed to \texttt{syslog-host.cn}, indicating a secondary covert channel.
+\end{itemize}
+
+\subsection{Exfiltration \& Sabotage}
+\begin{itemize}
+    \item \textbf{Data Exfiltration:} Sensitive schematic files were exfiltrated via FTP (Port 21) to IP 198.51.100.12.
+    \item \textbf{Sabotage:} Modbus TCP traffic (Port 502) showed Function Code 16 (Write Multiple Registers) commands sent to the PLC, attempting to alter chemical dosing levels.
+\end{itemize}
+
+\section{Defence and Counter-Disinformation Strategy}
+
+\subsection{Technical Defences}
+\begin{itemize}
+    \item \textbf{Network Segmentation:} Isolate the ICS/SCADA network from the corporate IT network using a DMZ.
+    \item \textbf{Modbus Inspection:} Deploy DPI (Deep Packet Inspection) firewalls to block unauthorized Modbus write commands.
+    \item \textbf{Patch Management:} Immediately patch SMB vulnerabilities and disable unnecessary services (Telnet, FTP).
+\end{itemize}
+
+\subsection{Counter-Disinformation}
+\begin{itemize}
+    \item \textbf{Official Communcation:} Release verified water quality reports via official government channels.
+    \item \textbf{Takedown Requests:} Coordinate with social media platforms to identify and remove deepfake content.
+    \item \textbf{Public Awareness:} Educate the public on verifying sources of information.
+\end{itemize}
+
+\section{Immediate Mitigation Measures (Defensive Script)}
+To quickly assess the security posture of critical systems, a Bash script was developed to audit open ports targeted during the attack's reconnaissance phase.
+
+\subsection{Script Overview: Scan Suspicious Ports}
+The script \texttt{Script3\_Scan\_Suspicious\_Ports.sh} automates the verification of port security on critical servers. It performs the following checks:
+\begin{enumerate}
+    \item \textbf{Service Enumeration:} Checks the status of five key ports identified in the PCAP as attack vectors:
+    \begin{itemize}
+        \item Port 21 (FTP - Exfiltration)
+        \item Port 23 (Telnet - Legacy/Insecure)
+        \item Port 445 (SMB - Lateral Movement)
+        \item Port 502 (Modbus - ICS Control)
+        \item Port 3389 (RDP - Remote Access)
+    \end{itemize}
+    \item \textbf{Status Reporting:} Uses \texttt{ss} and \texttt{netstat} commands to determine if these services are listening.
+    \item \textbf{Recommendations:} Provides immediate action items for any open high-risk ports (e.g., "Disable Telnet immediately").
+\end{enumerate}
+
+This script satisfies the requirement to "Scan for suspicious open ports" and ensures that no unnecessary attack surfaces remain exposed on the critical infrastructure.
+
+\section{Conclusion}
+The attack on Thames Water was a critical security incident. By implementing the proposed defence in depth strategy and utilizing automated scripts for immediate containment, the facility can restore integrity and prevent future compromises.
+
+\newpage
+\appendix
+\section{Appendix: Script Output}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{script3_output.png}
+    \caption{Output of Script 3 showing port scan results.}
+    \label{fig:script3}
+\end{figure}
+
+\end{document}
