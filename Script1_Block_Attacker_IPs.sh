@@ -36,19 +36,30 @@ BLOCKED=0
 for ip in "${ATTACKER_IPS[@]}"; do
     echo "[+] Blocking IP: $ip"
     
-    # Block incoming traffic from attacker
-    if iptables -A INPUT -s "$ip" -j DROP 2>/dev/null; then
-        echo "    [OK] Blocked incoming from $ip"
+    # Check if rule already exists to avoid duplicates
+    if iptables -C INPUT -s "$ip" -j DROP 2>/dev/null; then
+        echo "    [INFO] Already blocked incoming from $ip"
     else
-        echo "    [FAIL] Could not block incoming from $ip"
+        # Block incoming traffic from attacker
+        if iptables -A INPUT -s "$ip" -j DROP 2>/dev/null; then
+            echo "    [OK] Blocked incoming from $ip"
+        else
+            echo "    [FAIL] Could not block incoming from $ip"
+        fi
     fi
     
-    # Block outgoing traffic to attacker
-    if iptables -A OUTPUT -d "$ip" -j DROP 2>/dev/null; then
-        echo "    [OK] Blocked outgoing to $ip"
+    # Check if outgoing rule already exists
+    if iptables -C OUTPUT -d "$ip" -j DROP 2>/dev/null; then
+        echo "    [INFO] Already blocked outgoing to $ip"
         BLOCKED=$((BLOCKED + 1))
     else
-        echo "    [FAIL] Could not block outgoing to $ip"
+        # Block outgoing traffic to attacker
+        if iptables -A OUTPUT -d "$ip" -j DROP 2>/dev/null; then
+            echo "    [OK] Blocked outgoing to $ip"
+            BLOCKED=$((BLOCKED + 1))
+        else
+            echo "    [FAIL] Could not block outgoing to $ip"
+        fi
     fi
 done
 
